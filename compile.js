@@ -1,3 +1,3 @@
 import fs from 'fs';
 
-console.log('hello, ');
+console.log('Hello, World!');
