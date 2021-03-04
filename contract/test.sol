@@ -8,7 +8,7 @@ contract FIXTokenContract is ERC20 {
     using SafeMath for uint256;
     string public name = "FIXCoin";
     string public symbo = "FIX";
-    uint8 public decimals = 6;
+    uint8 public decimals = 12;
     uint256 private _initailSupply = 2000000000;
     uint256 private _totalSupply;
 
