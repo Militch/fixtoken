@@ -5,7 +5,7 @@ var Tx = require('ethereumjs-tx').Transaction;
 let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8101'));
 
 let compileOutDir = './build';
-let contractName = 'FIXTokenContract';
+let contractName = 'FIXToken';
 
 let fromAddr = '0xd73d7696979f8ff1776f7e679826a05a415da1e1';
 var gasLimit = 1000000;

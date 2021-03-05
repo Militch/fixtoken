@@ -4,9 +4,9 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./erc20.sol";
 import "./safe_math.sol";
 
-contract FIXTokenContract is ERC20 { 
+contract ERC20Basic is ERC20 { 
     using SafeMath for uint256;
-    string public name = "FIXCoin";
+    string public name = "FIXToken";
     string public symbo = "FIX";
     uint8 public decimals = 12;
     uint256 private _initailSupply = 2000000000;
