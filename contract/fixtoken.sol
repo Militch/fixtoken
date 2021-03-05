@@ -8,14 +8,17 @@ contract FIXToken is ERC20Basic {
     uint256 public tokensSold;
     event Sold(uint256 amount);
     event Bought(uint256 amount);
-
+    function () public payable {
+        buy();
+    }
     function buy() public payable {
          uint256 amountTobuy = msg.value;
-         tokensSold += amountTobuy;
          uint256 dexBalance = balanceOf(address(this));
          require(amountTobuy > 0, "You need to send some ether");
          require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
          transfer(msg.sender, amountTobuy);
+
+         tokensSold = tokensSold.add(amountTobuy);
          emit Bought(amountTobuy);
     }
 
