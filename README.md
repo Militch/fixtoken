@@ -13,3 +13,9 @@ Transfer amount to account
 ```js
 fixtoken.transfer.sendTransaction('0x..', 10)
 ```
+
+View account balance
+
+```js
+fixtoken.balanceOf.call('0x...');
+```
