@@ -1,34 +1,77 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.4.22 <0.9.0;
 
-import "./erc20_basic.sol";
+import "./erc20.sol";
+import "./safe_math.sol";
 
-contract FIXToken is ERC20Basic {
-    
-    uint256 public tokensSold;
-    event Sold(uint256 amount);
-    event Bought(uint256 amount);
-    function () public payable {
-        buy();
+contract FIXToken is ERC20 { 
+    using SafeMath for uint256;
+    string public name = "FixToken";
+    string public symbo = "FIX";
+    uint8 public decimals = 12;
+    uint256 private _initailSupply = 2000000000;
+    uint256 private _totalSupply;
+    address public minter;
+    mapping(address => uint256) private _balances;
+
+    mapping(address => mapping(address => uint256)) private _allowed;
+
+    constructor() {
+        _totalSupply = _initailSupply * (10 ** decimals);
+        minter = msg.sender;
+        _balances[minter] = _totalSupply;
+        emit Transfer(address(0), minter, _totalSupply);
     }
-    function buy() public payable {
-         uint256 amountTobuy = msg.value;
-         uint256 dexBalance = balanceOf(address(this));
-         require(amountTobuy > 0, "You need to send some ether");
-         require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
-         transfer(msg.sender, amountTobuy);
 
-         tokensSold = tokensSold.add(amountTobuy);
-         emit Bought(amountTobuy);
+    function totalSupply() public override view returns (uint256) {
+        return _totalSupply;
     }
 
-     function sell(uint256 amount) public  {
-        require(amount > 0, "You need to sell at least some tokens");
-        uint256 allowance = allowance(msg.sender, address(this));
-        require(allowance >= amount, "Check the token allowance");
-        transferFrom(msg.sender, address(this), amount);
-        // msg.sender.transfer(amount);
-        emit Sold(amount);
+    function balanceOf(address owner) override public view returns (uint256) {
+        return _balances[owner];
     }
-    
+
+    function allowance(address owner, address spender) override public view returns (uint256) {
+        return _allowed[owner][spender];
+    }
+
+    function approve(address spender, uint256 value) override public returns (bool) {
+        _allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+
+    /**
+    * @dev Transfer token for a specified address
+    * @param to The address to transfer to.
+    * @param value The amount to be transferred.
+    */
+    function transfer(address to, uint256 value) override public returns (bool) {
+        require(to != address(0), "Cannot send to all zero address.");
+        require(value <= _balances[msg.sender], "msg.sender balance is not enough.");
+
+        _balances[msg.sender] = _balances[msg.sender].sub(value);
+        _balances[to] = _balances[to].add(value);
+        emit Transfer(msg.sender, to, value);
+        return true;
+    }
+
+    /**
+    * @dev Transfer tokens from one address to another
+    * @param from address The address which you want to send tokens from
+    * @param to address The address which you want to transfer to
+    * @param value uint256 the amount of tokens to be transferred
+    */
+    function transferFrom(address from, address to, uint256 value) override public returns (bool) {
+        require(value <= _balances[from], "from doesnt have enough balance.");
+        require(value <= _allowed[from][msg.sender], "Allowance of msg.sender is not enough.");
+        require(to != address(0), "Cannot send to all zero address.");
+
+        _balances[from] = _balances[from].sub(value);
+        _balances[to] = _balances[to].add(value);
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        emit Transfer(from, to, value);
+        return true;
+    }
 }

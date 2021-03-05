@@ -5,10 +5,16 @@ var Tx = require('ethereumjs-tx').Transaction;
 let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8101'));
 
 let compileOutDir = './build';
-let contractName = 'FIXToken';
+let contractName = 'FIXTokenCrowd';
 
 let fromAddr = '0x60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 var gasLimit = 2200000;
+
+let contractAddr = '0xbd0665b350FF4E650bED234BB72F42140Cc1d55D';
+let params = web3.eth.abi.encodeParameters(
+    ['address'],
+    [contractAddr]
+).slice(2);
 
 let keystorepath = 'D:\\workspace\\fixtoken\\data0\\keystore\\UTC--2021-03-05T09-35-51.816544100Z--60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 
@@ -25,8 +31,9 @@ let binFile = fs.readFileSync(binFilePath);
 let abiString = abiFile.toString();
 let abiObj = JSON.parse(abiString);
 let bytestring= '0x' + binFile.toString();
+bytestring += params;
 web3.eth.estimateGas({
-    data: bytestring
+    data: bytestring 
 }).then((gasval)=>{
     if (gasLimit < gasval){
         return new Error(`gasLimit: ${gasLimit} less than gas estimate: ${gasval}`);
