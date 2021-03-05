@@ -18,4 +18,6 @@ View account balance
 
 ```js
 fixtoken.balanceOf.call('0x...');
+// or
+fixtoken.balanceOf.call('0x...') / Math.pow(10,12);
 ```
