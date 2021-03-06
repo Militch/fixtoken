@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
-import "./fixtoken.sol";
+import "./erc20_token.sol";
+import "./ownerd.sol";
 
-contract FIXTokenCrowd {
+contract CrowdSale is Ownerd {
     
     uint256 public tokensSold;
     ERC20 public token;
 
+    uint256 public price;
+    
+    bool private _active = false;
     event Sold(uint256 amount);
     event Bought(uint256 amount);
 
     constructor(address tokenAddress) {
-        token = FIXToken(tokenAddress); 
+        token = ERC20Token(tokenAddress);
     }
 
-    receive() external payable  {
+    receive() external payable {
         buy();
     }
     fallback() external {}
@@ -24,7 +28,14 @@ contract FIXTokenCrowd {
         return token.balanceOf(address(this));
     }
 
-    function buy() public payable {
+
+    modifier whenSaleIsActive(){
+        require(isActive(),
+         "Crowd sale is not active");
+         _;
+    }
+
+    function buy() public payable whenSaleIsActive {
          uint256 amountTobuy = msg.value;
          uint256 dexBalance = token.balanceOf(address(this));
          require(amountTobuy > 0, "You need to send some ether");
@@ -44,4 +55,17 @@ contract FIXTokenCrowd {
         emit Sold(amount);
     }
     
+    function isActive() public view returns (bool){
+        return _active;
+    }
+
+    function setActive(bool active) public onlyOwner returns (bool) {
+        _active = active;
+        return true;
+    }
+
+    function setPrice(uint256 _price) public onlyOwner returns (bool) {
+        price = _price;
+        return true;
+    }
 }

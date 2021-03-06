@@ -5,13 +5,24 @@ var Tx = require('ethereumjs-tx').Transaction;
 let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8101'));
 
 let compileOutDir = './build';
-let contractName = 'FIXToken';
+let contractName = 'ERC20Token';
 
+
+let tokenName = 'AbcToken';
+let tokenSymbol = 'ABC';
+let initailSupply = '120000';
+let decimals = '12';
 let fromAddr = '0x60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 var gasLimit = 2200000;
 
 let keystorepath = 'D:\\workspace\\fixtoken\\data0\\keystore\\UTC--2021-03-05T09-35-51.816544100Z--60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 
+
+let params = web3.eth.abi.encodeParameters(
+    ['string', 'string', 'uint256','uint8'],
+    [tokenName, tokenSymbol, initailSupply, decimals]
+).slice(2);
+console.log('params: ', params);
 let keystorefile = fs.readFileSync(keystorepath);
 let keystoreObj = JSON.parse(keystorefile.toString());
 let accountDec = web3.eth.accounts.decrypt(keystoreObj,'123');
@@ -25,6 +36,7 @@ let binFile = fs.readFileSync(binFilePath);
 let abiString = abiFile.toString();
 let abiObj = JSON.parse(abiString);
 let bytestring= '0x' + binFile.toString();
+bytestring += params;
 web3.eth.estimateGas({
     data: bytestring
 }).then((gasval)=>{

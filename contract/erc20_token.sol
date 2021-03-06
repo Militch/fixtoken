@@ -4,19 +4,26 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./erc20.sol";
 import "./safe_math.sol";
 
-contract FIXToken is ERC20 { 
+contract ERC20Token is ERC20 { 
     using SafeMath for uint256;
-    string public name = "FixToken";
-    string public symbo = "FIX";
-    uint8 public decimals = 12;
-    uint256 private _initailSupply = 2000000000;
+    string public name;
+    string public symbol;
+    uint8 public decimals;
     uint256 private _totalSupply;
     address public minter;
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowed;
 
-    constructor() {
+    constructor(
+        string memory _name, 
+        string memory _symbol, 
+        uint256 _initailSupply,
+        uint8 _decimals) {
+
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
         _totalSupply = _initailSupply * (10 ** decimals);
         minter = msg.sender;
         _balances[minter] = _totalSupply;

@@ -5,7 +5,7 @@ var Tx = require('ethereumjs-tx').Transaction;
 let web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8101'));
 
 let compileOutDir = './build';
-let contractName = 'FIXTokenCrowd';
+let contractName = 'CrowdSale';
 
 let fromAddr = '0x60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 var gasLimit = 2200000;
@@ -15,7 +15,7 @@ let params = web3.eth.abi.encodeParameters(
     ['address'],
     [contractAddr]
 ).slice(2);
-
+console.log('params: ', params);
 let keystorepath = 'D:\\workspace\\fixtoken\\data0\\keystore\\UTC--2021-03-05T09-35-51.816544100Z--60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 
 let keystorefile = fs.readFileSync(keystorepath);
