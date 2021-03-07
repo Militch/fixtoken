@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 interface ERC20 {
+  function decimals() external view returns (uint8);
   function totalSupply() external view returns (uint256);
   function balanceOf(address _owner) external view returns (uint256);
   function transfer(address _to, uint256 _value) external returns (bool);
