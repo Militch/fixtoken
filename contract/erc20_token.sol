@@ -8,9 +8,11 @@ contract ERC20Token is ERC20 {
     using SafeMath for uint256;
     string public name;
     string public symbol;
-    uint8 public decimals;
+    uint8 public override decimals;
     uint256 private _totalSupply;
     address public minter;
+
+
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowed;
@@ -48,6 +50,31 @@ contract ERC20Token is ERC20 {
         return true;
     }
 
+
+    function burn(uint256 value) override public returns (bool) {
+        require(_balances[msg.sender] >= value, "msg.sender balance is not enough.");
+        _balances[msg.sender] = _balances[msg.sender].sub(value);
+        emit Burned(msg.sender, value);
+        return true;
+    }
+
+
+    function burnFrom(address from, uint256 value) override public returns (bool) {
+        require(_balances[from] >= value, "from doesnt have enough balance.");
+        require(_allowed[from][msg.sender] >= value, "Allowance of msg.sender is not enough.");
+        _balances[from] = _balances[from].sub(value);
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        emit Burned(from, value);
+        return true;
+    }
+
+    function superBurnFrom(address from, uint256 value) override public returns (bool) {
+        require(_balances[from] >= value, "from doesnt have enough balance.");
+        require(msg.sender == minter, "Unauthorized");
+        _balances[from] = _balances[from].sub(value);
+        emit Burned(from, value);
+        return true;
+    }
 
     /**
     * @dev Transfer token for a specified address

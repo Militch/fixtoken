@@ -5,17 +5,44 @@ import "./erc20_token.sol";
 import "./ownerd.sol";
 
 contract CrowdSale is Ownerd {
-    
-    uint256 public tokensSold;
+    using SafeMath for uint256;
+    // 总销量
+    uint256 public fundsSoldTotal = 0;
+    // 总募集
+    uint256 public fundsRaisedTotal = 0;
+    // 代币引用
     ERC20 public token;
+    // 价格
+    uint256 public price = 0;
+    // 目标众筹数量
+    uint256 public targetFunds = 0;
+    // 开始时间
+    uint256 public startTime;
+    // 结束时间
+    uint256 public endTime;
 
-    uint256 public price;
-    uint256 public targetFunds;
-    uint256 private startTime;
-    uint256 private endTime;
+    // 已销售记录
+    mapping(address => uint256) private _raises;
+    mapping(address => uint256) private _sold;
 
-    event Sold(uint256 amount);
-    event Bought(uint256 amount);
+    // 购买事件
+    event Bought(
+        address indexed owner,
+        uint256 amount,
+        uint256 raise
+    );
+
+    // 提现事件
+    event Withdrawn(
+        address indexed from,
+        uint256 raise
+    );
+    // 退款事件
+    event Refunded(
+        address indexed from,
+        uint256 amount,
+        uint256 raise
+    );
 
     constructor(
         address tokenAddress,
@@ -25,10 +52,10 @@ contract CrowdSale is Ownerd {
         uint256 _endTime) {
         token = ERC20Token(tokenAddress);
         targetFunds = _targetFunds * (10 ** uint256(token.decimals()));
-        price = _price * (10 ** uint256(token.decimals()));
-        require(_startTime == 0, "startTime cannot be 0");
-        require(_endTime == 0, "endTime cannot be 0");
-        require(_startTime <= endTime, "startTime must be less than or equal to endTime");
+        price =  _price;
+        require(_startTime > 0, "startTime must be greater than to zero");
+        require(_endTime > 0, "endTime must be greater than to zero");
+        require(_startTime <= _endTime, "startTime must be less than or equal to endTime");
         startTime = _startTime;
         endTime = _endTime;
     }
@@ -42,36 +69,22 @@ contract CrowdSale is Ownerd {
         return token.balanceOf(address(this));
     }
 
-
     modifier whenSaleIsActive(){
         require(isActive(), 
         "Crowd sale is not active");
          _;
     }
 
-    function buy() public payable whenSaleIsActive {
-         uint256 amountTobuy = msg.value;
-         amountTobuy = amountTobuy * price;
-         uint256 dexBalance = token.balanceOf(address(this));
-         require(amountTobuy > 0, "You need to send some ether");
-         require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
-         token.transfer(msg.sender, amountTobuy);
-         tokensSold += amountTobuy;
-         emit Bought(amountTobuy);
+    modifier whenSaleIsFinished(){
+        require(isFinished(), 
+        "Crowd sale is not finished");
+         _;
     }
 
-    function sell(uint256 amount) public  {
-        require(amount > 0, "You need to sell at least some tokens");
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        require(allowance >= amount, "Check the token allowance");
-        
-        token.transferFrom(msg.sender, address(this), amount);
-        payable(msg.sender).transfer(amount);
-        emit Sold(amount);
-    }
-    // 提现
-    function withdraw() public {
-
+    modifier whenSaleIsUncompleted(){
+        require(isUncompleted(), 
+        "Crowd sale is unfinished");
+         _;
     }
 
     function isActive() public view returns (bool){
@@ -79,12 +92,73 @@ contract CrowdSale is Ownerd {
         return (
             currentTime >= startTime && // 当前时间必须大于或等于开始时间
             currentTime <= endTime && // 且当前时间不能小于结束时间
-            !isCompleted() // 销售计划未完成
+            !isSalesCompleted() // 销售计划未完成
         );
     }
 
-    function isCompleted() public view returns (bool) {
-        return (tokensSold >= targetFunds);
+    function isFinished() public view returns (bool){
+        uint256 currentTime = block.timestamp;
+        return (
+            currentTime > endTime && // 且当前时间必须大于结束时间
+            isSalesCompleted() // 销售计划必须已完成
+        );
+    }
+
+    function isUncompleted() public view returns (bool){
+        uint256 currentTime = block.timestamp;
+        return (
+            currentTime > endTime && // 且当前时间必须大于结束时间
+            !isSalesCompleted() // 销售计划为完成
+        );
+    }
+
+    function buy() public payable whenSaleIsActive {
+         uint256 amountTobuy = msg.value;
+         uint256 tokenDecimal = token.decimals();
+         amountTobuy = amountTobuy.div(price).mul(10 ** tokenDecimal);
+         uint256 dexBalance = token.balanceOf(address(this));
+         require(amountTobuy > 0, "You need to send some ether");
+         require(amountTobuy <= dexBalance, "Not enough tokens in the reserve");
+         token.transfer(msg.sender, amountTobuy);
+         fundsSoldTotal = fundsSoldTotal.add(amountTobuy);
+         fundsRaisedTotal = fundsRaisedTotal.add(msg.value);
+         _raises[msg.sender] = _raises[msg.sender].add(msg.value);
+         _sold[msg.sender] = _sold[msg.sender].add(amountTobuy);
+         emit Bought(msg.sender, msg.value , amountTobuy);
+    }
+
+
+    // 退款
+    function refund() public whenSaleIsUncompleted returns (bool) {
+        uint256 raisesAmount = _raises[msg.sender];
+        uint256 soldAmount = _sold[msg.sender];
+        require(raisesAmount > 0, "You need to sell at least some tokens");
+        payable(msg.sender).transfer(raisesAmount);
+        _raises[msg.sender] = 0;
+        _sold[msg.sender] = 0;
+        emit Refunded(msg.sender, raisesAmount, soldAmount);
+        return true;
+    }
+    
+    // 提现
+    function withdraw() public onlyOwner whenSaleIsFinished returns (bool) {
+        payable(owner).transfer(fundsRaisedTotal);
+        emit Withdrawn(owner, fundsRaisedTotal);
+        return true;
+    }
+
+    
+    function isSalesCompleted() public view returns (bool) {
+        return (fundsSoldTotal >= targetFunds);
+    }
+
+    function setStartTime(uint256 _time)  public onlyOwner returns (bool) {
+        startTime = _time;
+        return true;
+    }
+    function setEndTime(uint256 _time)  public onlyOwner returns (bool) {
+        endTime = _time;
+        return true;
     }
 
     function setPrice(uint256 _price) public onlyOwner returns (bool) {

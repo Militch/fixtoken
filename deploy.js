@@ -8,9 +8,10 @@ let compileOutDir = './build';
 let contractName = 'ERC20Token';
 
 
-let tokenName = 'AbcToken';
-let tokenSymbol = 'ABC';
-let initailSupply = '120000';
+let tokenName = 'TestToken';
+let tokenSymbol = 'TT';
+// 100,000
+let initailSupply = '100000';
 let decimals = '12';
 let fromAddr = '0x60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 var gasLimit = 2200000;

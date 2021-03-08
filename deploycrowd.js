@@ -10,10 +10,18 @@ let contractName = 'CrowdSale';
 let fromAddr = '0x60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
 var gasLimit = 2200000;
 
-let contractAddr = '0xbd0665b350FF4E650bED234BB72F42140Cc1d55D';
+let contractAddr = '0x46dfC78661c7184f32200Aad872399A21257C926';
+
+let targetFunds = '1000';
+let price = '1000000000000000000';
+let startTime = Math.floor(new Date().getTime() / 1000);
+let endTime = (startTime + (2 * 24 * 60 * 60));
+startTime = '0x' + startTime.toString(16);
+endTime = '0x' + endTime.toString(16);
+
 let params = web3.eth.abi.encodeParameters(
-    ['address'],
-    [contractAddr]
+    ['address' , 'uint256', 'uint256', 'uint256', 'uint256'],
+    [contractAddr, targetFunds, price, startTime, endTime ]
 ).slice(2);
 console.log('params: ', params);
 let keystorepath = 'D:\\workspace\\fixtoken\\data0\\keystore\\UTC--2021-03-05T09-35-51.816544100Z--60d1148b3b2ab38a5937dc30244a3b4c5ec6da52';
