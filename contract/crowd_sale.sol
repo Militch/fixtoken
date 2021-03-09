@@ -83,7 +83,7 @@ contract CrowdSale is Ownerd {
 
     modifier whenSaleIsUncompleted(){
         require(isUncompleted(), 
-        "Crowd sale is unfinished");
+        "Crowd sale is uncompleted");
          _;
     }
 
