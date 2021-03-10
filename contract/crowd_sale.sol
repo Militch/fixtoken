@@ -99,7 +99,7 @@ contract CrowdSale is Ownerd {
     function isFinished() public view returns (bool){
         uint256 currentTime = block.timestamp;
         return (
-            currentTime > endTime && // 且当前时间必须大于结束时间
+            currentTime > endTime && // 当前时间必须大于结束时间
             isSalesCompleted() // 销售计划必须已完成
         );
     }
@@ -153,16 +153,25 @@ contract CrowdSale is Ownerd {
     }
 
     function setStartTime(uint256 _time)  public onlyOwner returns (bool) {
+        require(_time > 0, "time must be greater than to zero");
+        require(_time <= endTime, "time must be less than or equal to endTime");
         startTime = _time;
         return true;
     }
     function setEndTime(uint256 _time)  public onlyOwner returns (bool) {
+        require(_time > 0, "time must be greater than to zero");
+        require(_time >= startTime, "time must be greater than or equal to startTime");
         endTime = _time;
         return true;
     }
 
     function setPrice(uint256 _price) public onlyOwner returns (bool) {
         price = _price;
+        return true;
+    }
+
+    function setTargetFunds(uint256 _amount) public onlyOwner returns (bool) {
+        targetFunds = _amount;
         return true;
     }
 }
